@@ -23,6 +23,7 @@ import { InvoiceComponent } from './component/invoice/invoice.component';
 import { ExtractArrayValue } from './pipes/extractvalue.pipe';
 import { CacheInterceptor } from './interceptor/cache.interceptor';
 
+//We need to modify the modules
 @NgModule({
 	declarations: [
 		ExtractArrayValue,
