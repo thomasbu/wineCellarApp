@@ -1,14 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { EventType, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, map, startWith, catchError, of } from 'rxjs';
 import { DataState } from 'src/app/enum/datastate.enum';
-import { CustomHttpResponse, Page, Profile } from 'src/app/interface/appstates';
+import { CustomHttpResponse, Page } from 'src/app/interface/appstates';
 import { Customer } from 'src/app/interface/customer';
 import { State } from 'src/app/interface/state';
 import { User } from 'src/app/interface/user';
 import { CustomerService } from 'src/app/service/customer.service';
-import { UserService } from 'src/app/service/user.service';
 
 @Component({
 	selector: 'app-customers',

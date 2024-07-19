@@ -1,24 +1,27 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { Router } from '@angular/router';
 import { Observable, of, BehaviorSubject, map, startWith, catchError } from 'rxjs';
 import { DataState } from 'src/app/enum/datastate.enum';
-import { Key } from 'src/app/enum/key.enum';
+import { EventType } from 'src/app/enum/event-type.enum';
 import { CustomHttpResponse, Profile } from 'src/app/interface/appstates';
 import { State } from 'src/app/interface/state';
 import { UserService } from 'src/app/service/user.service';
 
 @Component({
 	selector: 'app-profile',
-	templateUrl: './profile.component.html',
-	styleUrls: ['./profile.component.css'],
+	templateUrl: './user.component.html',
+	styleUrls: ['./user.component.css'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProfileComponent implements OnInit {
+export class UserComponent implements OnInit {
 	profileState$: Observable<State<CustomHttpResponse<Profile>>>;
 	private dataSubject = new BehaviorSubject<CustomHttpResponse<Profile>>(null);
 	private isLoadingSubject = new BehaviorSubject<boolean>(false);
 	isLoading$ = this.isLoadingSubject.asObservable();
+	private showLogsSubject = new BehaviorSubject<boolean>(false);
+	showLogs$ = this.showLogsSubject.asObservable();
 	readonly DataState = DataState;
+	readonly EventType = EventType;
 
 	constructor(private userService: UserService) {}
 
@@ -31,11 +34,7 @@ export class ProfileComponent implements OnInit {
 			}),
 			startWith({ dataState: DataState.LOADING }),
 			catchError((error: string) => {
-				return of({
-					dataState: DataState.ERROR,
-					appData: this.dataSubject.value,
-					error,
-				});
+				return of({ dataState: DataState.ERROR, appData: this.dataSubject.value, error });
 			}),
 		);
 	}
@@ -49,17 +48,10 @@ export class ProfileComponent implements OnInit {
 				this.isLoadingSubject.next(false);
 				return { dataState: DataState.LOADED, appData: this.dataSubject.value };
 			}),
-			startWith({
-				dataState: DataState.LOADED,
-				appData: this.dataSubject.value,
-			}),
+			startWith({ dataState: DataState.LOADED, appData: this.dataSubject.value }),
 			catchError((error: string) => {
 				this.isLoadingSubject.next(false);
-				return of({
-					dataState: DataState.LOADED,
-					appData: this.dataSubject.value,
-					error,
-				});
+				return of({ dataState: DataState.LOADED, appData: this.dataSubject.value, error });
 			}),
 		);
 	}
@@ -70,6 +62,7 @@ export class ProfileComponent implements OnInit {
 			this.profileState$ = this.userService.updatePassword$(passwordForm.value).pipe(
 				map(response => {
 					console.log(response);
+					this.dataSubject.next({ ...response, data: response.data });
 					passwordForm.reset();
 					this.isLoadingSubject.next(false);
 					return { dataState: DataState.LOADED, appData: this.dataSubject.value };
@@ -121,6 +114,23 @@ export class ProfileComponent implements OnInit {
 		);
 	}
 
+	toggleMfa(): void {
+		this.isLoadingSubject.next(true);
+		this.profileState$ = this.userService.toggleMfa$().pipe(
+			map(response => {
+				console.log(response);
+				this.dataSubject.next({ ...response, data: response.data });
+				this.isLoadingSubject.next(false);
+				return { dataState: DataState.LOADED, appData: this.dataSubject.value };
+			}),
+			startWith({ dataState: DataState.LOADED, appData: this.dataSubject.value }),
+			catchError((error: string) => {
+				this.isLoadingSubject.next(false);
+				return of({ dataState: DataState.LOADED, appData: this.dataSubject.value, error });
+			}),
+		);
+	}
+
 	updatePicture(image: File): void {
 		if (image) {
 			this.isLoadingSubject.next(true);
@@ -147,6 +157,10 @@ export class ProfileComponent implements OnInit {
 				}),
 			);
 		}
+	}
+
+	toggleLogs(): void {
+		this.showLogsSubject.next(!this.showLogsSubject.value);
 	}
 
 	private getFormData(image: File): FormData {

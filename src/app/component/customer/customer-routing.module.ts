@@ -1,0 +1,18 @@
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+import { AuthenticationGuard } from 'src/app/guard/authentication.guard';
+import { CustomersComponent } from './customers/customers.component';
+import { NewcustomerComponent } from './newcustomer/newcustomer.component';
+import { CustomerDetailComponent } from './customer-detail/customer-detail.component';
+
+const customersRoutes: Routes = [
+	{ path: 'customers', component: CustomersComponent, canActivate: [AuthenticationGuard] },
+	{ path: 'customers/new', component: NewcustomerComponent, canActivate: [AuthenticationGuard] },
+	{ path: 'customers/:id', component: CustomerDetailComponent, canActivate: [AuthenticationGuard] },
+];
+
+@NgModule({
+	imports: [RouterModule.forChild(customersRoutes)],
+	exports: [RouterModule],
+})
+export class CustomerRoutingModule {}
